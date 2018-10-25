@@ -8,6 +8,19 @@ if Code.ensure_loaded?(SweetXml) do
         |> SweetXml.xpath(
           ~x"//DescribeLoadBalancersResponse",
           load_balancers: load_balancers_xml_description(),
+          request_id: ~x"./ResponseMetadata/RequestId/text()"s,
+          next_marker: ~x"./DescribeLoadBalancersResult/NextMarker/text()"S
+        )
+
+      {:ok, Map.put(resp, :body, parsed_body)}
+    end
+
+    def parse({:ok, %{body: xml} = resp}, :describe_tags) do
+      parsed_body =
+        xml
+        |> SweetXml.xpath(
+          ~x"//DescribeTagsResponse",
+          tag_descriptions: load_balancer_tags_description(),
           request_id: ~x"./ResponseMetadata/RequestId/text()"s
         )
 
@@ -20,7 +33,8 @@ if Code.ensure_loaded?(SweetXml) do
         |> SweetXml.xpath(
           ~x"//DescribeTargetGroupsResponse",
           target_groups: target_groups_xml_description(),
-          request_id: ~x"./ResponseMetadata/RequestId/text()"s
+          request_id: ~x"./ResponseMetadata/RequestId/text()"s,
+          next_marker: ~x"./DescribeTargetGroupsResult/NextMarker/text()"s
         )
 
       {:ok, Map.put(resp, :body, parsed_body)}
@@ -122,7 +136,19 @@ if Code.ensure_loaded?(SweetXml) do
       ]
     end
 
-    defp target_groups_xml_description do
+    defp load_balancer_tags_description do
+      [
+        ~x"./DescribeTagsResult/TagDescriptions/member"l,
+        resource_arn: ~x"./ResourceArn/text()"s,
+        tags: [
+          ~x"./Tags/member"l,
+          key: ~x"./Key/text()"s,
+          value: ~x"./Value/text()"s
+        ]
+      ]
+    end
+
+    def target_groups_xml_description do
       [
         ~x"./DescribeTargetGroupsResult/TargetGroups/member"l,
         target_group_arn: ~x"./TargetGroupArn/text()"s,

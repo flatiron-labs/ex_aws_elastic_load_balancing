@@ -1086,7 +1086,8 @@ defmodule ExAws.ElasticLoadBalancingV2 do
 
     %ExAws.Operation.Query{
       path: "/",
-      params: params
+      params:
+        params
         |> filter_nil_params
         |> Map.put("Action", action_string)
         |> Map.put("Version", @version),
