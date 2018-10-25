@@ -8,8 +8,22 @@ if Code.ensure_loaded?(SweetXml) do
         |> SweetXml.xpath(
           ~x"//DescribeLoadBalancersResponse",
           load_balancers: load_balancers_xml_description(),
+          request_id: ~x"./ResponseMetadata/RequestId/text()"s,
+          next_marker: ~x"./DescribeLoadBalancersResult/NextMarker/text()"s
+        )
+
+      {:ok, Map.put(resp, :body, parsed_body)}
+    end
+
+    def parse({:ok, %{body: xml} = resp}, :describe_tags) do
+      parsed_body =
+        xml
+        |> SweetXml.xpath(
+          ~x"//DescribeTagsResponse",
+          tag_descriptions: load_balancer_tags_description(),
           request_id: ~x"./ResponseMetadata/RequestId/text()"s
         )
+
       {:ok, Map.put(resp, :body, parsed_body)}
     end
 
@@ -40,7 +54,7 @@ if Code.ensure_loaded?(SweetXml) do
             policy_name: ~x"./PolicyName/text()"s,
             cookie_expiration_period: ~x"./CookieExpirationPeriod/text()"i
           ],
-          other_policies: ~x"./OtherPolicies/member/text()"ls,
+          other_policies: ~x"./OtherPolicies/member/text()"ls
         ],
         source_security_group: [
           ~x"./SourceSecurityGroup",
@@ -57,7 +71,7 @@ if Code.ensure_loaded?(SweetXml) do
             load_balancer_port: ~x"./LoadBalancerPort/text()"i
           ],
           policy_names: [
-            ~x"./PolicyNames/member/text()"ls,
+            ~x"./PolicyNames/member/text()"ls
           ]
         ],
         health_check: [
@@ -72,6 +86,17 @@ if Code.ensure_loaded?(SweetXml) do
       ]
     end
 
+    defp load_balancer_tags_description() do
+      [
+        ~x"./DescribeTagsResult/TagDescriptions/member"l,
+        load_balancer_name: ~x"./LoadBalancerName/text()"s,
+        tags: [
+          ~x"./Tags/member"l,
+          key: ~x"./Key/text()"s,
+          value: ~x"./Value/text()"s
+        ]
+      ]
+    end
   end
 else
   defmodule ExAws.ElasticLoadBalancing.Parsers do
